@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/explore_recipe.dart';
+import 'models/tab_manager.dart';
 import 'components/components.dart';
 import 'screens/explore_screen.dart';
 import 'screens/recipes_screen.dart';
@@ -19,15 +21,6 @@ class _HomeState extends State<Home> {
   List<String> keyword = [];
   TextEditingController searchController = TextEditingController();
 
-  void increment(String value) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      keyword.add(value);
-      searchController.text = "";
-    });
-    prefs.setStringList('keyword', keyword);
-  }
-
   static List<Widget> pages = <Widget>[
     ExploreScreen(),
     RecipesScreen(),
@@ -41,34 +34,53 @@ class _HomeState extends State<Home> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-            title: Text('Fooderlich',
-                style: Theme.of(context).textTheme.headline6),
-            actions: <Widget>[
-              IconButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => SearchScreen()));
-                  },
-                  icon: Icon(Icons.search))
-            ]),
-        body: pages[_selectedIndex],
-        bottomNavigationBar: BottomNavigationBar(
+  Widget build(
+    BuildContext context,
+  ) {
+    return Consumer(
+      builder: (context, TabManager tabManager, child) {
+        return Scaffold(
+          appBar: AppBar(
+              title: Text('Fooderlich',
+                  style: Theme.of(context).textTheme.headline6),
+              actions: <Widget>[
+                IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => SearchScreen()));
+                    },
+                    icon: Icon(Icons.search))
+              ]),
+          // 2
+          body: pages[tabManager.selectedTab],
+          bottomNavigationBar: BottomNavigationBar(
             selectedItemColor:
                 Theme.of(context).textSelectionTheme.selectionColor,
-            currentIndex: _selectedIndex,
-            onTap: _onItemTapped,
-            items: <BottomNavigationBarItem>[
+            // 3
+            currentIndex: tabManager.selectedTab,
+            onTap: (index) {
+              // 4
+              tabManager.goToTab(index);
+            },
+            items: [
               const BottomNavigationBarItem(
-                  icon: Icon(Icons.explore), label: 'Explore'),
+                icon: Icon(Icons.explore),
+                label: 'Explore',
+              ),
               const BottomNavigationBarItem(
-                  icon: Icon(Icons.receipt), label: 'Recipes'),
+                icon: Icon(Icons.receipt),
+                label: 'Recipes',
+              ),
               const BottomNavigationBarItem(
-                  icon: Icon(Icons.list), label: 'To Buy'),
-            ]));
+                icon: Icon(Icons.list),
+                label: 'To Buy',
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
